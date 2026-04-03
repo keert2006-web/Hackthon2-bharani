@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Activity Tracker</title>
+  <style>
+    :root {
+      --navy: #1a2340; --navy-light: #243060;
+      --green: #27ae60; --green-light: #2ecc71;
+      --orange: #e67e22; --white: #ffffff;
+      --bg: #f0f4ff; --card-bg: #ffffff;
+      --text-dark: #1a2340; --text-muted: #6b7a99;
+      --border: #dde3f5; --shadow: 0 4px 20px rgba(26,35,64,0.10);
+      --radius: 14px; --transition: 0.3s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text-dark); font-size: 15px; line-height: 1.6; }
+
+    .navbar { position: fixed; top: 0; left: 0; right: 0; background: var(--navy); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; z-index: 999; box-shadow: 0 2px 16px rgba(26,35,64,0.18); }
+    .nav-logo { color: var(--white); font-size: 20px; font-weight: 700; }
+    .nav-links { list-style: none; display: flex; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px; font-weight: 500; transition: color var(--transition); padding: 4px 0; border-bottom: 2px solid transparent; }
+    .nav-links a:hover { color: var(--white); border-bottom-color: var(--green); }
+    .hamburger { display: none; color: white; font-size: 24px; cursor: pointer; }
+
+    .hero { min-height: 100vh; background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 60%, #2d4a8a 100%); display: flex; align-items: center; justify-content: center; gap: 60px; padding: 100px 40px 60px; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(39,174,96,0.12) 0%, transparent 70%); top: -100px; right: -100px; border-radius: 50%; }
+    .hero-content { max-width: 520px; animation: fadeUp 0.8s ease both; }
+    .hero-title { font-size: 46px; font-weight: 800; color: var(--white); line-height: 1.15; margin-bottom: 16px; }
+    .hero-sub { font-size: 20px; color: var(--green-light); font-weight: 600; margin-bottom: 12px; }
+    .hero-desc { color: rgba(255,255,255,0.72); font-size: 16px; margin-bottom: 32px; }
+    .btn-primary { display: inline-block; background: var(--green); color: white; padding: 14px 36px; border-radius: 50px; font-size: 16px; font-weight: 600; text-decoration: none; transition: background var(--transition), transform var(--transition), box-shadow var(--transition); box-shadow: 0 4px 16px rgba(39,174,96,0.35); }
+    .btn-primary:hover { background: var(--green-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(39,174,96,0.45); }
+    .hero-visual { display: flex; flex-direction: column; gap: 16px; animation: fadeUp 0.8s 0.2s ease both; }
+    .floating-card { background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: white; padding: 14px 24px; border-radius: var(--radius); font-size: 15px; font-weight: 500; backdrop-filter: blur(8px); animation: float 3s ease-in-out infinite; }
+    .floating-card.delay1 { animation-delay: 0.5s; }
+    .floating-card.delay2 { animation-delay: 1s; }
+
+    .activities-section { padding: 80px 20px 60px; background: var(--bg); }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-title { font-size: 32px; font-weight: 800; color: var(--navy); margin-bottom: 32px; text-align: center; }
+    .section-title::after { content: ''; display: block; width: 60px; height: 4px; background: var(--green); border-radius: 2px; margin: 10px auto 0; }
+
+    .progress-box { background: var(--white); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .progress-text { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 15px; color: var(--navy); }
+    #progressPercent { color: var(--green); font-size: 16px; }
+    .progress-bar-bg { width: 100%; height: 14px; background: #e8ecf5; border-radius: 7px; overflow: hidden; margin-bottom: 14px; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--green), var(--green-light)); border-radius: 7px; transition: width 0.5s ease; }
+    .progress-stats { display: flex; gap: 28px; font-size: 14px; color: var(--text-muted); }
+    .progress-stats strong { color: var(--navy); }
+
+    .reset-row { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+    .btn-reset { background: transparent; border: 2px solid var(--orange); color: var(--orange); padding: 8px 22px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all var(--transition); }
+    .btn-reset:hover { background: var(--orange); color: white; transform: translateY(-1px); }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    .activity-card { background: var(--card-bg); border-radius: var(--radius); padding: 22px 20px 18px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; transition: transform var(--transition), box-shadow var(--transition); animation: fadeUp 0.5s ease both; }
+    .activity-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(26,35,64,0.14); }
+    .activity-card.completed { border-left: 4px solid var(--green); opacity: 0.85; }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-title { font-size: 17px; font-weight: 700; color: var(--navy); }
+    .status-badge { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
+    .status-badge.pending { background: #fff3e0; color: var(--orange); }
+    .status-badge.completed { background: #e8f8ef; color: var(--green); }
+    .card-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .badge-cat { background: #eef1fb; color: var(--navy-light); }
+    .badge-priority-high { background: #fde8e8; color: #c0392b; }
+    .badge-priority-medium { background: #fff3e0; color: #d35400; }
+    .badge-priority-low { background: #e8f8ef; color: var(--green); }
+    .card-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; }
+    .card-footer { margin-top: 6px; display: flex; align-items: center; gap: 10px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--navy); user-select: none; }
+    .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
+    .completed-label { font-size: 13.5px; font-weight: 600; color: var(--green); }
+
+    .back-to-top { position: fixed; bottom: 28px; right: 28px; background: var(--navy); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(26,35,64,0.25); transition: background var(--transition), transform var(--transition); z-index: 900; }
+    .back-to-top:hover { background: var(--navy-light); transform: translateY(-2px); }
+    .back-to-top.show { display: flex; }
+
+    .footer { background: var(--navy); color: rgba(255,255,255,0.65); text-align: center; padding: 20px; font-size: 13px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+
+    @media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } .hero { flex-direction: column; text-align: center; padding: 100px 24px 60px; gap: 40px; } .hero-visual { flex-direction: row; flex-wrap: wrap; justify-content: center; } }
+    @media (max-width: 768px) { .hamburger { display: block; } .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; right: 0; background: var(--navy); padding: 16px 32px 20px; gap: 16px; } .nav-links.open { display: flex; } .hero-title { font-size: 32px; } }
+    @media (max-width: 480px) { .cards-grid { grid-template-columns: 1fr; } .progress-text { flex-direction: column; gap: 4px; } .hero-title { font-size: 26px; } }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">📚 ActivityTracker</div>
+    <div class="hamburger" id="hamburger">&#9776;</div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#activities">Activities</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <h1 class="hero-title">Student Activity Tracker</h1>
+      <p class="hero-sub">Welcome! Track your daily learning progress here.</p>
+      <p class="hero-desc">Stay organized, mark your progress, and achieve your learning goals — all in one simple place.</p>
+      <a href="#activities" class="btn-primary">View Activities</a>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-card">✅ HTML Basics</div>
+      <div class="floating-card delay1">🎨 CSS Flexbox</div>
+      <div class="floating-card delay2">⚡ JavaScript DOM</div>
+    </div>
+  </section>
+
+  <section class="activities-section" id="activities">
+    <div class="container">
+      <h2 class="section-title">Your Activities</h2>
+      <div class="progress-box">
+        <div class="progress-text">
+          <span id="progressLabel">0 out of 6 activities completed</span>
+          <span id="progressPercent">0% Complete</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-stats">
+          <span>✅ Completed: <strong id="completedCount">0</strong></span>
+          <span>⏳ Pending: <strong id="pendingCount">6</strong></span>
+        </div>
+      </div>
+      <div class="reset-row">
+        <button class="btn-reset" id="resetBtn">🔄 Reset All</button>
+      </div>
+      <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+  </section>
+
+  <button class="back-to-top" id="backToTop">▲</button>
+
+  <footer class="footer">
+    <p>© 2026 G. Bharanidharan | RD National College of Arts and Science | IT Dept</p>
+  </footer>
+
+  <script>
+    const defaultActivities = [
+      { id: 1, title: "HTML Basics", description: "Learn HTML tags, forms, headings, and page structure using semantic elements.", category: "HTML", priority: "high", status: "pending" },
+      { id: 2, title: "CSS Flexbox", description: "Understand CSS Flexbox layout — align, justify, and build responsive rows and columns.", category: "CSS", priority: "high", status: "pending" },
+      { id: 3, title: "JavaScript DOM", description: "Learn DOM manipulation — select elements, change content, and handle events.", category: "JavaScript", priority: "high", status: "pending" },
+      { id: 4, title: "CSS Grid Layout", description: "Build two-dimensional layouts using CSS Grid for desktop and mobile screens.", category: "CSS", priority: "medium", status: "pending" },
+      { id: 5, title: "JavaScript Events", description: "Practice click, change, and submit event listeners with real interactive examples.", category: "JavaScript", priority: "medium", status: "pending" },
+      { id: 6, title: "localStorage API", description: "Save and retrieve user data using browser localStorage for data persistence.", category: "JavaScript", priority: "low", status: "pending" }
+    ];
+
+    function loadActivities() {
+      const saved = localStorage.getItem("sat_activities");
+      return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultActivities));
+    }
+    function saveActivities(a) { localStorage.setItem("sat_activities", JSON.stringify(a)); }
+
+    function calculateProgress(activities) {
+      const total = activities.length;
+      const completed = activities.filter(a => a.status === "completed").length;
+      return { total, completed, pending: total - completed, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
+    }
+
+    function updateProgress(activities) {
+      const { total, completed, pending, percentage } = calculateProgress(activities);
+      document.getElementById("progressLabel").textContent = `${completed} out of ${total} activities completed`;
+      document.getElementById("progressPercent").textContent = `${percentage}% Complete`;
+      document.getElementById("progressBar").style.width = `${percentage}%`;
+      document.getElementById("completedCount").textContent = completed;
+      document.getElementById("pendingCount").textContent = pending;
+    }
+
+    function toggleActivityStatus(id, activities) {
+      const activity = activities.find(a => a.id === id);
+      if (activity) {
+        activity.status = activity.status === "pending" ? "completed" : "pending";
+        saveActivities(activities);
+        renderActivities(activities);
+        updateProgress(activities);
+      }
+    }
+
+    function renderActivities(activities) {
+      const grid = document.getElementById("cardsGrid");
+      grid.innerHTML = "";
+      activities.forEach((activity, index) => {
+        const isCompleted = activity.status === "completed";
+        const card = document.createElement("div");
+        card.className = `activity-card ${isCompleted ? "completed" : ""}`;
+        card.style.animationDelay = `${index * 0.08}s`;
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="card-title">${activity.title}</div>
+            <span class="status-badge ${isCompleted ? "completed" : "pending"}">${isCompleted ? "✅ Completed" : "⏳ Pending"}</span>
+          </div>
+          <div class="card-badges">
+            <span class="badge badge-cat">${activity.category}</span>
+            <span class="badge badge-priority-${activity.priority}">${activity.priority} priority</span>
+          </div>
+          <p class="card-desc">${activity.description}</p>
+          <div class="card-footer">
+            ${isCompleted
+              ? `<span class="completed-label">✓ Activity Completed</span>`
+              : `<label class="checkbox-label"><input type="checkbox" data-id="${activity.id}" /> Mark as Completed</label>`}
+          </div>`;
+        if (!isCompleted) {
+          card.querySelector(`input[data-id="${activity.id}"]`).addEventListener("change", function () {
+            toggleActivityStatus(activity.id, activities);
+          });
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    function resetAll(activities) {
+      if (confirm("Reset all activities to Pending?")) {
+        activities.forEach(a => a.status = "pending");
+        saveActivities(activities);
+        renderActivities(activities);
+        updateProgress(activities);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const activities = loadActivities();
+      renderActivities(activities);
+      updateProgress(activities);
+      document.getElementById("resetBtn").addEventListener("click", function () { resetAll(activities); });
+      const hamburger = document.getElementById("hamburger");
+      const navLinks = document.getElementById("navLinks");
+      hamburger.addEventListener("click", function () { navLinks.classList.toggle("open"); });
+      navLinks.querySelectorAll("a").forEach(link => link.addEventListener("click", function () { navLinks.classList.remove("open"); }));
+      const btn = document.getElementById("backToTop");
+      window.addEventListener("scroll", function () { btn.classList.toggle("show", window.scrollY > 300); });
+      btn.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    });
+  </script>
+</body>
+</html>
